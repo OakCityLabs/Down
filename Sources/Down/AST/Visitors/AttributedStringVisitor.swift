@@ -16,7 +16,7 @@ import Foundation
 
 public typealias ListPrefixGeneratorBuilder = (List) -> ListItemPrefixGenerator
 
-public class AttributedStringVisitor {
+open class AttributedStringVisitor: Visitor {
 
     // MARK: - Properties
 
@@ -42,26 +42,22 @@ public class AttributedStringVisitor {
         self.listPrefixGeneratorBuilder = listPrefixGeneratorBuilder
     }
 
-}
-
-extension AttributedStringVisitor: Visitor {
-
     public typealias Result = NSMutableAttributedString
 
-    public func visit(document node: Document) -> NSMutableAttributedString {
+    open func visit(document node: Document) -> NSMutableAttributedString {
         let result = visitChildren(of: node).joined
         styler.style(document: result)
         return result
     }
 
-    public func visit(blockQuote node: BlockQuote) -> NSMutableAttributedString {
+    open func visit(blockQuote node: BlockQuote) -> NSMutableAttributedString {
         let result = visitChildren(of: node).joined
         if node.hasSuccessor { result.append(.paragraphSeparator) }
         styler.style(blockQuote: result, nestDepth: node.nestDepth)
         return result
     }
 
-    public func visit(list node: List) -> NSMutableAttributedString {
+    open func visit(list node: List) -> NSMutableAttributedString {
 
         listPrefixGenerators.append(listPrefixGeneratorBuilder(node))
         defer { listPrefixGenerators.removeLast() }
@@ -74,7 +70,7 @@ extension AttributedStringVisitor: Visitor {
         return result
     }
 
-    public func visit(item node: Item) -> NSMutableAttributedString {
+    open func visit(item node: Item) -> NSMutableAttributedString {
         let result = visitChildren(of: node).joined
 
         let prefix = listPrefixGenerators.last?.next() ?? "•"
@@ -87,7 +83,7 @@ extension AttributedStringVisitor: Visitor {
         return result
     }
 
-    public func visit(codeBlock node: CodeBlock) -> NSMutableAttributedString {
+    open func visit(codeBlock node: CodeBlock) -> NSMutableAttributedString {
         guard let literal = node.literal else { return .empty }
         let result = literal.replacingNewlinesWithLineSeparators().attributed
         if node.hasSuccessor { result.append(.paragraphSeparator) }
@@ -95,7 +91,7 @@ extension AttributedStringVisitor: Visitor {
         return result
     }
 
-    public func visit(htmlBlock node: HtmlBlock) -> NSMutableAttributedString {
+    open func visit(htmlBlock node: HtmlBlock) -> NSMutableAttributedString {
         guard let literal = node.literal else { return .empty }
         let result = literal.replacingNewlinesWithLineSeparators().attributed
         if node.hasSuccessor { result.append(.paragraphSeparator) }
@@ -103,87 +99,87 @@ extension AttributedStringVisitor: Visitor {
         return result
     }
 
-    public func visit(customBlock node: CustomBlock) -> NSMutableAttributedString {
+    open func visit(customBlock node: CustomBlock) -> NSMutableAttributedString {
         guard let result = node.literal?.attributed else { return .empty }
         styler.style(customBlock: result)
         return result
     }
 
-    public func visit(paragraph node: Paragraph) -> NSMutableAttributedString {
+    open func visit(paragraph node: Paragraph) -> NSMutableAttributedString {
         let result = visitChildren(of: node).joined
         if node.hasSuccessor { result.append(.paragraphSeparator) }
         styler.style(paragraph: result)
         return result
     }
 
-    public func visit(heading node: Heading) -> NSMutableAttributedString {
+    open func visit(heading node: Heading) -> NSMutableAttributedString {
         let result = visitChildren(of: node).joined
         if node.hasSuccessor { result.append(.paragraphSeparator) }
         styler.style(heading: result, level: node.headingLevel)
         return result
     }
 
-    public func visit(thematicBreak node: ThematicBreak) -> NSMutableAttributedString {
+    open func visit(thematicBreak node: ThematicBreak) -> NSMutableAttributedString {
         let result = "\(String.zeroWidthSpace)\n".attributed
         styler.style(thematicBreak: result)
         return result
     }
 
-    public func visit(text node: Text) -> NSMutableAttributedString {
+    open func visit(text node: Text) -> NSMutableAttributedString {
         guard let result = node.literal?.attributed else { return .empty }
         styler.style(text: result)
         return result
     }
 
-    public func visit(softBreak node: SoftBreak) -> NSMutableAttributedString {
+    open func visit(softBreak node: SoftBreak) -> NSMutableAttributedString {
         let result = (options.contains(.hardBreaks) ? String.lineSeparator : " ").attributed
         styler.style(softBreak: result)
         return result
     }
 
-    public func visit(lineBreak node: LineBreak) -> NSMutableAttributedString {
+    open func visit(lineBreak node: LineBreak) -> NSMutableAttributedString {
         let result = String.lineSeparator.attributed
         styler.style(lineBreak: result)
         return result
     }
 
-    public func visit(code node: Code) -> NSMutableAttributedString {
+    open func visit(code node: Code) -> NSMutableAttributedString {
         guard let result = node.literal?.attributed else { return .empty }
         styler.style(code: result)
         return result
     }
 
-    public func visit(htmlInline node: HtmlInline) -> NSMutableAttributedString {
+    open func visit(htmlInline node: HtmlInline) -> NSMutableAttributedString {
         guard let result = node.literal?.attributed else { return .empty }
         styler.style(htmlInline: result)
         return result
     }
 
-    public func visit(customInline node: CustomInline) -> NSMutableAttributedString {
+    open func visit(customInline node: CustomInline) -> NSMutableAttributedString {
         guard let result = node.literal?.attributed else { return .empty }
         styler.style(customInline: result)
         return result
     }
 
-    public func visit(emphasis node: Emphasis) -> NSMutableAttributedString {
+    open func visit(emphasis node: Emphasis) -> NSMutableAttributedString {
         let result = visitChildren(of: node).joined
         styler.style(emphasis: result)
         return result
     }
 
-    public func visit(strong node: Strong) -> NSMutableAttributedString {
+    open func visit(strong node: Strong) -> NSMutableAttributedString {
         let result = visitChildren(of: node).joined
         styler.style(strong: result)
         return result
     }
 
-    public func visit(link node: Link) -> NSMutableAttributedString {
+    open func visit(link node: Link) -> NSMutableAttributedString {
         let result = visitChildren(of: node).joined
         styler.style(link: result, title: node.title, url: node.url)
         return result
     }
 
-    public func visit(image node: Image) -> NSMutableAttributedString {
+    open func visit(image node: Image) -> NSMutableAttributedString {
         let result = visitChildren(of: node).joined
         styler.style(image: result, title: node.title, url: node.url)
         return result
